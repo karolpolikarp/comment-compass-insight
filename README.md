@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
 
-## Project info
+# YouTube Comment Sentiment Analyzer (Python)
 
-**URL**: https://lovable.dev/projects/3b0dbbb1-28e3-4bfe-993d-ca256f12faf2
+A Flask web application that analyzes the sentiment of YouTube comments using AI.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Fetch real YouTube comments using the YouTube Data API
+- Analyze sentiment using OpenAI's ChatGPT (with TextBlob fallback)
+- Interactive web interface with real-time filtering
+- SQLite database for storing analysis results
+- Sentiment visualization with charts
 
-**Use Lovable**
+## Setup Instructions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3b0dbbb1-28e3-4bfe-993d-ca256f12faf2) and start prompting.
+### 1. Install Python Dependencies
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+pip install -r requirements.txt
 ```
 
-**Edit a file directly in GitHub**
+### 2. Get API Keys
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+#### YouTube Data API Key (Required)
+1. Go to [Google Cloud Console](https://console.developers.google.com/)
+2. Create a new project or select existing one
+3. Enable the YouTube Data API v3
+4. Create credentials (API Key)
+5. Copy the API key
 
-**Use GitHub Codespaces**
+#### OpenAI API Key (Optional)
+1. Go to [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create a new API key
+3. Copy the API key
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Note: If you don't provide an OpenAI API key, the app will use TextBlob for sentiment analysis (less accurate but free).
 
-## What technologies are used for this project?
+### 3. Configure Environment Variables
 
-This project is built with:
+Create a `.env` file in the project root:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+cp .env.example .env
+```
 
-## How can I deploy this project?
+Edit the `.env` file and add your API keys:
 
-Simply open [Lovable](https://lovable.dev/projects/3b0dbbb1-28e3-4bfe-993d-ca256f12faf2) and click on Share -> Publish.
+```
+YOUTUBE_API_KEY=your_actual_youtube_api_key
+OPENAI_API_KEY=your_actual_openai_api_key
+```
 
-## Can I connect a custom domain to my Lovable project?
+### 4. Run the Application
 
-Yes, you can!
+```bash
+python app.py
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The application will start on `http://localhost:5000`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## How to Use
+
+1. Open your browser and go to `http://localhost:5000`
+2. Enter a YouTube video URL in the input field
+3. Click "Analyze Comments" 
+4. Wait for the analysis to complete
+5. View the results:
+   - Sentiment statistics (positive, negative, neutral percentages)
+   - Interactive sentiment chart
+   - Filterable list of comments with sentiment scores
+6. Use the sentiment slider to filter comments by sentiment
+
+## Project Structure
+
+```
+├── app.py              # Main Flask application
+├── templates/
+│   └── index.html      # Web interface
+├── requirements.txt    # Python dependencies
+├── .env.example       # Environment variables template
+├── .env              # Your actual environment variables (create this)
+├── comments.db       # SQLite database (created automatically)
+└── README.md         # This file
+```
+
+## Database Schema
+
+The app uses SQLite with two tables:
+
+- `analyses`: Stores analysis metadata (video info, stats)
+- `comments`: Stores individual comments with sentiment scores
+
+## API Endpoints
+
+- `GET /`: Main web interface
+- `POST /analyze`: Analyze video comments
+- `GET /recent-analyses`: Get recent analysis history
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"YouTube API not configured"**
+   - Make sure you have set the `YOUTUBE_API_KEY` in your `.env` file
+   - Verify the API key is valid and YouTube Data API v3 is enabled
+
+2. **"Video not found"**
+   - Check that the YouTube URL is valid and public
+   - Some videos may have comments disabled
+
+3. **OpenAI API errors**
+   - If you get OpenAI errors, the app will automatically fall back to TextBlob
+   - Check your OpenAI API key and usage limits
+
+4. **Port already in use**
+   - If port 5000 is busy, change the port in `app.py`: `app.run(port=5001)`
+
+## Notes
+
+- The app analyzes up to 100 comments per video (YouTube API limit)
+- Sentiment scores range from -1 (most negative) to 1 (most positive)
+- Analysis results are saved locally in SQLite database
+- The web interface is responsive and works on mobile devices
