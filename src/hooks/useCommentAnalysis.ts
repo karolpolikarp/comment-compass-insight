@@ -3,10 +3,13 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Comment } from '@/pages/Index';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// Check if Supabase environment variables are available
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 export const useCommentAnalysis = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +24,11 @@ export const useCommentAnalysis = () => {
     setError(null);
 
     try {
+      // Check if Supabase is configured
+      if (!supabase) {
+        throw new Error('Supabase is not configured. Please check your environment variables.');
+      }
+
       // Step 1: Scrape YouTube comments
       console.log('Scraping YouTube comments...');
       const { data: scrapeData, error: scrapeError } = await supabase.functions.invoke(
@@ -112,6 +120,10 @@ export const useCommentAnalysis = () => {
   };
 
   const getRecentAnalyses = async () => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
     const { data, error } = await supabase
       .from('analyses')
       .select('*')
@@ -129,6 +141,7 @@ export const useCommentAnalysis = () => {
     analyzeVideo,
     getRecentAnalyses,
     isLoading,
-    error
+    error,
+    isSupabaseConfigured: !!supabase
   };
 };
