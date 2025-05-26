@@ -31,8 +31,9 @@ export const CommentScraper: React.FC<CommentScraperProps> = ({ onScrape, isLoad
 
     try {
       await onScrape(videoUrl);
+      setVideoUrl(''); // Clear input on success
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to scrape comments');
+      setError(err instanceof Error ? err.message : 'Failed to analyze comments');
     }
   };
 
@@ -62,7 +63,7 @@ export const CommentScraper: React.FC<CommentScraperProps> = ({ onScrape, isLoad
         
         <Button 
           type="submit" 
-          disabled={isLoading}
+          disabled={isLoading || !videoUrl.trim()}
           className="w-full bg-red-600 hover:bg-red-700"
         >
           {isLoading ? (
@@ -76,10 +77,10 @@ export const CommentScraper: React.FC<CommentScraperProps> = ({ onScrape, isLoad
         </Button>
       </form>
       
-      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-sm text-yellow-800">
-          <strong>Note:</strong> This is a demo using simulated comments. 
-          In a real implementation, this would use the YouTube Data API to fetch actual comments.
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>How it works:</strong> This app fetches real YouTube comments using the YouTube Data API 
+          and analyzes their sentiment using ChatGPT. Results are saved to your database for future reference.
         </p>
       </div>
     </div>

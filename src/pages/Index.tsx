@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { CommentScraper } from '@/components/CommentScraper';
 import { CommentCard } from '@/components/CommentCard';
 import { SentimentSlider } from '@/components/SentimentSlider';
-import { analyzeSentiment } from '@/utils/sentimentAnalysis';
+import { useCommentAnalysis } from '@/hooks/useCommentAnalysis';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Comment {
   id: string;
@@ -16,61 +17,33 @@ export interface Comment {
 const Index = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [sentimentFilter, setSentimentFilter] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [videoTitle, setVideoTitle] = useState<string>('');
+  const { analyzeVideo, isLoading } = useCommentAnalysis();
+  const { toast } = useToast();
 
-  // Mock function to simulate YouTube comment scraping
-  const mockScrapeComments = async (videoUrl: string) => {
-    setIsLoading(true);
-    
-    // Extract video ID from URL (basic implementation)
-    const videoId = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)?.[1];
-    
-    if (!videoId) {
-      throw new Error('Invalid YouTube URL');
+  const handleScrapeComments = async (videoUrl: string) => {
+    try {
+      console.log('Starting analysis for:', videoUrl);
+      
+      const result = await analyzeVideo(videoUrl);
+      
+      setComments(result.comments);
+      setVideoTitle(result.videoTitle);
+      setSentimentFilter(0); // Reset filter
+      
+      toast({
+        title: "Analysis Complete!",
+        description: `Successfully analyzed ${result.comments.length} comments from "${result.videoTitle}"`,
+      });
+      
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock comments with varied sentiment
-    const mockComments = [
-      "This video is absolutely amazing! Best content I've seen all year!",
-      "Great explanation, really helped me understand the concept better.",
-      "Not bad, could be improved though.",
-      "This is terrible, waste of time.",
-      "Love this channel, keep up the good work!",
-      "I disagree with some points but overall decent video.",
-      "Boring content, didn't learn anything new.",
-      "Fantastic tutorial! Exactly what I was looking for.",
-      "Could have been shorter, too much fluff.",
-      "Outstanding work, very professional and informative!",
-      "This sucks, terrible audio quality.",
-      "Pretty good video, thanks for sharing.",
-      "Amazing content as always! Subscribed!",
-      "Not my cup of tea but I can see why others like it.",
-      "Worst video ever, complete garbage.",
-      "Nice video, learned something new today.",
-      "Excellent presentation and clear explanations!",
-      "Okay video, nothing special though.",
-      "Horrible content, clickbait title.",
-      "Great job! Really appreciate the effort you put in."
-    ];
-
-    const processedComments: Comment[] = mockComments.map((text, index) => {
-      const sentiment = analyzeSentiment(text);
-      return {
-        id: `comment-${index}`,
-        text,
-        author: `User${index + 1}`,
-        sentiment,
-        sentimentLabel: sentiment < -0.2 ? 'negative' : sentiment > 0.2 ? 'positive' : 'neutral'
-      };
-    });
-
-    setComments(processedComments);
-    setVideoTitle(`Sample Video ${videoId}`);
-    setIsLoading(false);
   };
 
   // Filter comments based on sentiment slider
@@ -118,7 +91,7 @@ const Index = () => {
         </div>
 
         {/* Comment Scraper */}
-        <CommentScraper onScrape={mockScrapeComments} isLoading={isLoading} />
+        <CommentScraper onScrape={handleScrapeComments} isLoading={isLoading} />
 
         {/* Results Section */}
         {comments.length > 0 && (
